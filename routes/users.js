@@ -24,7 +24,7 @@ module.exports = (app) => {
       return res.status(201).send({ message: `User ${username} created` });
     } catch (e) {
       // For developer debugging. Send to loggly or similar service.
-      console.log(e.error);
+      console.log(e);
 
       let status;
       let message;
@@ -51,7 +51,7 @@ module.exports = (app) => {
     } catch (e) {
       console.log(e.error);
 
-      return res.status(400).send({ message: `Bad Request.` });
+      res.status(500).send({ message: "Internal Server Error." });
     }
   });
 
@@ -68,9 +68,9 @@ module.exports = (app) => {
 
       return res.status(200).send(rows[0]);
     } catch (e) {
-      console.log(e.error);
+      console.log(e);
 
-      return res.status(400).send({ message: `Bad Request.` });
+      res.status(500).send({ message: "Internal Server Error." });
     }
   });
 };

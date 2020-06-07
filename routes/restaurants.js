@@ -40,7 +40,7 @@ module.exports = (app) => {
   });
 
   app.get("/restaurants", async (req, res) => {
-    const { currentlyOpen } = req.body;
+    const { currentlyOpen, userId } = req.body;
     const constraints = pick(req.body, [
       "name",
       "distance",
@@ -51,7 +51,9 @@ module.exports = (app) => {
       "cuisineType",
     ]);
 
-    const filters = { ...constraints };
+    const filters = {
+      ...constraints,
+    };
 
     if (constraints.distance) {
       filters.distance = {
@@ -59,8 +61,28 @@ module.exports = (app) => {
       };
     }
 
-    const query = { where: { ...filters } };
-    console.log(parseInt(currentlyOpen));
+    // Get user's blacklist to exclude from results
+    const userBlacklist = await models.Blacklist.findAll({
+      where: { UserId: userId },
+    }).map((row) => row.RestaurantId);
+
+    const query = {
+      where: {
+        ...filters,
+        "$Blacklisted.RestaurantId$": {
+          [models.Sequelize.Op.notIn]: userBlacklist,
+        },
+      },
+      include: [
+        {
+          model: models.Blacklist,
+          as: "Blacklisted",
+          attributes: ["RestaurantId"],
+          required: false,
+        },
+      ],
+    };
+
     if (parseInt(currentlyOpen)) {
       // Build sql-like TIME string
       const now = new Date();
@@ -73,7 +95,7 @@ module.exports = (app) => {
       const TIME = `${hours}:${minutes}:${seconds}`;
       // const TIME = "21:00:00";
 
-      query.include = {
+      query.include.push({
         model: models.BusinessHours,
         where: {
           day,
@@ -84,8 +106,13 @@ module.exports = (app) => {
             [models.Sequelize.Op.gte]: TIME,
           },
         },
-      };
+      });
     }
+    console.log("\n");
+    console.log("QUERY", JSON.stringify(query));
+    console.log("\n");
+
+    // return res.send(query);
 
     const rows = await models.Restaurant.findAll(query);
 
@@ -129,7 +156,7 @@ module.exports = (app) => {
     } catch (e) {
       console.error(e);
 
-      return res.status(400).send({ message: "Bad Request." });
+      res.status(500).send({ message: "Internal Server Error." });
     }
   });
 
@@ -176,7 +203,7 @@ module.exports = (app) => {
     } catch (e) {
       console.log(e);
 
-      res.status(400).send({ message: "Bad Request." });
+      res.status(500).send({ message: "Internal Server Error." });
     }
   });
 
@@ -197,5 +224,97 @@ module.exports = (app) => {
     }
 
     res.status(200).send({ message: `Successfully unfavourited restaurant.` });
+  });
+
+  app.get("/blacklist", async (req, res) => {
+    try {
+      const { userId } = req.body;
+
+      const results = await models.Blacklist.findAll({
+        where: { UserId: { [models.Sequelize.Op.eq]: parseInt(userId) } },
+      });
+
+      res.status(200).send({ results });
+    } catch (e) {
+      console.error(e);
+
+      res.status(500).send({ message: "Internal Server Error" });
+    }
+  });
+
+  app.post("/blacklist", async (req, res) => {
+    try {
+      const { userId, restaurantId } = req.body;
+
+      const verificationPromises = [
+        models.User.findAll({ where: { id: userId } }),
+        models.Restaurant.findAll({ where: { id: restaurantId } }),
+      ];
+
+      const [userResults, restaurantResults] = await Promise.all(
+        verificationPromises
+      );
+
+      const userExists = userResults.length;
+      const restaurantExists = restaurantResults.length;
+
+      if (!userExists || !restaurantExists) {
+        return res.status(400).send({
+          message: {
+            userExists,
+            restaurantExists,
+          },
+        });
+      }
+
+      const username = userResults[0].username;
+      const result = await models.Blacklist.findOrCreate({
+        where: {
+          username,
+          RestaurantId: restaurantId,
+          UserId: userId,
+        },
+      });
+
+      if (!result[1]) {
+        return res.status(200).send({ message: "Already blacklisted!" });
+      }
+
+      const restaurantName = restaurantResults[0].name;
+      res
+        .status(200)
+        .send({ message: `Added restaurant to blacklist: ${restaurantName}` });
+    } catch (e) {
+      console.error(e);
+
+      res.status(500).send({ message: "Internal Server Error" });
+    }
+  });
+
+  app.delete("/unblacklist", async (req, res) => {
+    try {
+      const { userId, restaurantId } = req.body;
+
+      const result = await models.Blacklist.destroy({
+        where: {
+          UserId: userId,
+          RestaurantId: restaurantId,
+        },
+      });
+
+      if (result === 0) {
+        return res
+          .status(400)
+          .send({ message: `Restaurant was not in blacklist.` });
+      }
+
+      res.status(200).send({
+        message: `Successfully unblacklisted restaurant. The owners are relieved.`,
+      });
+    } catch (e) {
+      console.error(e);
+
+      res.status(500).send({ message: "Internal Server Error" });
+    }
   });
 };

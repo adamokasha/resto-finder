@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Restaurant.associate = (models) => {
     models.Restaurant.hasMany(models.Favourite);
-    models.Restaurant.hasMany(models.Blacklisted);
+    models.Restaurant.hasMany(models.Blacklist, { as: "Blacklisted" });
     models.Restaurant.hasMany(models.BusinessHours);
   };
 

@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
 
   User.associate = (models) => {
     models.User.hasMany(models.Favourite);
-    models.User.hasMany(models.Blacklisted);
+    models.User.hasMany(models.Blacklist);
   };
 
   return User;

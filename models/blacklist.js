@@ -1,20 +1,20 @@
 module.exports = (sequelize, DataTypes) => {
-  const Blacklisted = sequelize.define(
-    "Blacklisted",
+  const Blacklist = sequelize.define(
+    "Blacklist",
     {
       username: DataTypes.STRING,
     },
     { freezeTableName: true }
   );
 
-  Blacklisted.associate = (models) => {
-    models.Blacklisted.belongsTo(models.User, {
+  Blacklist.associate = (models) => {
+    models.Blacklist.belongsTo(models.User, {
       onDelete: "CASCADE",
       foreignKey: {
         allowNull: false,
       },
     });
-    models.Blacklisted.belongsTo(models.Restaurant, {
+    models.Blacklist.belongsTo(models.Restaurant, {
       onDelete: "CASCADE",
       foreignKey: {
         allowNull: false,
@@ -22,5 +22,5 @@ module.exports = (sequelize, DataTypes) => {
     });
   };
 
-  return Blacklisted;
+  return Blacklist;
 };
