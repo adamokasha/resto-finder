@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       postalCode: DataTypes.STRING,
       country: DataTypes.STRING,
       cuisineType: DataTypes.STRING,
+      distance: DataTypes.INTEGER,
     },
     { freezeTableName: true, sequelize }
   );
