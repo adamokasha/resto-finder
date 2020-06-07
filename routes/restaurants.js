@@ -114,4 +114,88 @@ module.exports = (app) => {
 
     res.status(200).send(row);
   });
+
+  app.get("/favourites", async (req, res) => {
+    try {
+      const { userId } = req.body;
+
+      const results = await models.Favourite.findAll({
+        where: {
+          UserId: userId,
+        },
+      });
+
+      return res.status(200).send({ results });
+    } catch (e) {
+      console.error(e);
+
+      return res.status(400).send({ message: "Bad Request." });
+    }
+  });
+
+  app.post("/favourites", async (req, res) => {
+    try {
+      const { restaurantId, userId } = req.body;
+
+      const verificationPromises = [
+        models.User.findAll({ where: { id: userId } }),
+        models.Restaurant.findAll({ where: { id: restaurantId } }),
+      ];
+
+      const [userResults, restaurantResults] = await Promise.all(
+        verificationPromises
+      );
+
+      const userExists = userResults.length;
+      const restaurantExists = restaurantResults.length;
+
+      if (!userExists || !restaurantExists) {
+        return res.status(400).send({
+          message: {
+            userExists,
+            restaurantExists,
+          },
+        });
+      }
+
+      const username = userResults[0].username;
+      const result = await models.Favourite.findOrCreate({
+        where: {
+          username,
+          RestaurantId: restaurantId,
+          UserId: userId,
+        },
+      });
+
+      if (!result[1]) {
+        return res.status(200).send({ message: "Already favourited!" });
+      }
+
+      const restaurantName = restaurantResults[0].name;
+      res.status(200).send({ message: `Added restaurant: ${restaurantName}` });
+    } catch (e) {
+      console.log(e);
+
+      res.status(400).send({ message: "Bad Request." });
+    }
+  });
+
+  app.delete("/unfavourite", async (req, res) => {
+    const { userId, restaurantId } = req.body;
+
+    const result = await models.Favourite.destroy({
+      where: {
+        UserId: userId,
+        RestaurantId: restaurantId,
+      },
+    });
+
+    if (result === 0) {
+      return res
+        .status(400)
+        .send({ message: `Restaurant was not in favourites.` });
+    }
+
+    res.status(200).send({ message: `Successfully unfavourited restaurant.` });
+  });
 };
