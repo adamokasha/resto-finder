@@ -1,3 +1,11 @@
+/**
+ * models/index.js
+ *
+ * Create new connection pool to DB.
+ * Loads models by looking in every .js file in current dir
+ * except for this file (index.js) and imports them into
+ * Sequelize. If there is an association, pass the db object.
+ */
 const Sequelize = require("sequelize");
 const fs = require("fs");
 const path = require("path");

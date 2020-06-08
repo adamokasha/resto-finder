@@ -157,11 +157,7 @@ module.exports = {
   ],
 
   updateRestaurant: [
-    check("restaurantId")
-      .isString({ min: 1, max: 255 })
-      .isNumeric()
-      .trim()
-      .escape(),
+    check("id").isInt(),
     check("name")
       .optional()
       .isString()

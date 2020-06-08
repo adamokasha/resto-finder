@@ -2,6 +2,11 @@ const models = require("../models");
 const userValidation = require("../middlewares/validation-middlewares");
 
 module.exports = (app) => {
+  /**
+   * POST /user
+   *
+   * Add a new user
+   */
   app.post(
     "/user",
     userValidation.addUser,
@@ -49,6 +54,11 @@ module.exports = (app) => {
     }
   );
 
+  /**
+   * GET /user/list
+   *
+   * Get a list of all the current users
+   */
   app.get("/user/list", async (req, res) => {
     try {
       const rows = await models.User.findAll();
@@ -61,6 +71,11 @@ module.exports = (app) => {
     }
   });
 
+  /**
+   * GET /user/:id
+   *
+   * Get user by id
+   */
   app.get(
     "/user/:id",
     userValidation.getUser,
