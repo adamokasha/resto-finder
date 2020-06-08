@@ -58,7 +58,10 @@ module.exports = (app) => {
   app.get("/user/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const rows = await models.User.findAll({ where: { id }, limit: 1 });
+      const rows = await models.User.findAll({
+        where: { [models.Sequelize.Op.eq]: id },
+        limit: 1,
+      });
 
       if (!rows.length) {
         return res
