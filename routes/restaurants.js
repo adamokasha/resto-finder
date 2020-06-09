@@ -1,16 +1,29 @@
 const models = require("../models");
 const { pick, assign } = require("lodash");
+const {
+  addRestaurant,
+  getRestaurants,
+  updateRestaurant,
+  getFavourites,
+  addOrRemoveFavourite,
+  getBlackList,
+  addOrRemoveFromBlacklist,
+  validate,
+} = require("../middlewares/validation-middlewares");
 
 module.exports = (app) => {
-  // TODO: validation, error handling
-  app.post("/restaurant", async (req, res) => {
+  /**
+   * POST /restaurant
+   *
+   * add a new restaurant to the database
+   */
+  app.post("/restaurant", addRestaurant, validate, async (req, res) => {
     try {
       const {
         name,
         city,
         province,
         postalCode,
-        country,
         cuisineType,
         distance,
         businessHours,
@@ -21,7 +34,7 @@ module.exports = (app) => {
         city,
         province,
         postalCode,
-        country,
+        country: "Canada",
         cuisineType,
         distance,
       });
@@ -45,7 +58,13 @@ module.exports = (app) => {
     }
   });
 
-  app.get("/restaurants", async (req, res) => {
+  /**
+   * GET /restaurants
+   *
+   * Get a set of restaurant recommendations based on a set of passed in
+   * filters.
+   */
+  app.get("/restaurants", getRestaurants, validate, async (req, res) => {
     try {
       const { currentlyOpen, userId } = req.body;
       const constraints = pick(req.body, [
@@ -54,13 +73,12 @@ module.exports = (app) => {
         "city",
         "province",
         "postalCode",
-        "country",
         "cuisineType",
       ]);
 
       let iLikeFilters = {};
       // Iterate over filters that should be iLike query and add to iLikeFilters
-      ["name", "city", "province", "postalCode", "country", "cuisineType"]
+      ["name", "city", "postalCode", "cuisineType"]
         .map((filterName) => {
           if (constraints[filterName]) {
             return {
@@ -89,9 +107,15 @@ module.exports = (app) => {
         };
       }
 
+      if (constraints.province) {
+        filters.province = {
+          [models.Sequelize.Op.eq]: constraints.province,
+        };
+      }
+
       // Get user's blacklist to exclude from results
       const userBlacklist = await models.Blacklist.findAll({
-        where: { UserId: userId },
+        where: { UserId: { [models.Sequelize.Op.eq]: userId } },
       }).map((row) => row.RestaurantId);
 
       // build final query object
@@ -99,17 +123,18 @@ module.exports = (app) => {
         where: {
           ...filters,
           "$Blacklisted.RestaurantId$": {
-            [models.Sequelize.Op.notIn]: userBlacklist,
+            [models.Sequelize.Op.or]: [
+              { [models.Sequelize.Op.notIn]: userBlacklist },
+              { [models.Sequelize.Op.eq]: null },
+            ],
           },
         },
-        include: [
-          {
-            model: models.Blacklist,
-            as: "Blacklisted",
-            attributes: ["RestaurantId"],
-            required: false,
-          },
-        ],
+        include: {
+          model: models.Blacklist,
+          as: "Blacklisted",
+          attributes: ["RestaurantId"],
+          required: false,
+        },
       };
 
       // If currentlyOpen param passed in, need to pass additional filters from BusinessHours table
@@ -149,8 +174,12 @@ module.exports = (app) => {
     }
   });
 
-  // TODO: validation, error handling
-  app.put("/restaurant", async (req, res) => {
+  /**
+   * PUT /restaurant
+   *
+   * Update an existing restaurant
+   */
+  app.put("/restaurant", updateRestaurant, validate, async (req, res) => {
     try {
       const restaurantId = req.body.id;
       const updates = pick(req.body, [
@@ -159,16 +188,21 @@ module.exports = (app) => {
         "city",
         "province",
         "postalCode",
-        "country",
         "cuisineType",
       ]);
 
-      await models.Restaurant.update(
+      const result = await models.Restaurant.update(
         { ...updates },
         {
           where: { id: { [models.Sequelize.Op.eq]: restaurantId } },
         }
       );
+
+      if (!result[0]) {
+        return res
+          .status(404)
+          .send({ message: `Restaurant with ${restaurantId} not found.` });
+      }
 
       res.status(200).send({ message: "Update successful" });
     } catch (e) {
@@ -178,13 +212,30 @@ module.exports = (app) => {
     }
   });
 
-  app.get("/favourites", async (req, res) => {
+  /**
+   * GET /favourites
+   *
+   * Get a user's favourites list
+   */
+  app.get("/favourites", getFavourites, validate, async (req, res) => {
     try {
       const { userId } = req.body;
 
+      // Get blacklisted restaurants
+      const blackListResults = await models.Blacklist.findAll({
+        where: {
+          UserId: { [models.Sequelize.Op.eq]: userId },
+        },
+      }).map((blacklistItem) => blacklistItem.RestaurantId);
+
+      // query favs without blacklisted restaurants
       const results = await models.Favourite.findAll({
         where: {
           UserId: { [models.Sequelize.Op.eq]: userId },
+          RestaurantId: { [models.Sequelize.Op.notIn]: blackListResults },
+        },
+        include: {
+          model: models.Restaurant,
         },
       });
 
@@ -196,7 +247,12 @@ module.exports = (app) => {
     }
   });
 
-  app.post("/favourites", async (req, res) => {
+  /**
+   * POST /favourites
+   *
+   * Add a restaurant to favourites
+   */
+  app.post("/favourites", addOrRemoveFavourite, validate, async (req, res) => {
     try {
       const { restaurantId, userId } = req.body;
 
@@ -261,26 +317,43 @@ module.exports = (app) => {
     }
   });
 
-  app.delete("/unfavourite", async (req, res) => {
-    const { userId, restaurantId } = req.body;
+  /**
+   * DELETE /unfavourite
+   *
+   * Remove a restaurant from favourites
+   */
+  app.delete(
+    "/unfavourite",
+    addOrRemoveFavourite,
+    validate,
+    async (req, res) => {
+      const { userId, restaurantId } = req.body;
 
-    const result = await models.Favourite.destroy({
-      where: {
-        UserId: { [models.Sequelize.Op.eq]: userId },
-        RestaurantId: { [models.Sequelize.Op.eq]: restaurantId },
-      },
-    });
+      const result = await models.Favourite.destroy({
+        where: {
+          UserId: { [models.Sequelize.Op.eq]: userId },
+          RestaurantId: { [models.Sequelize.Op.eq]: restaurantId },
+        },
+      });
 
-    if (result === 0) {
-      return res
-        .status(400)
-        .send({ message: `Restaurant was not in favourites.` });
+      if (result === 0) {
+        return res
+          .status(400)
+          .send({ message: `Restaurant was not in favourites.` });
+      }
+
+      res
+        .status(200)
+        .send({ message: `Successfully unfavourited restaurant.` });
     }
+  );
 
-    res.status(200).send({ message: `Successfully unfavourited restaurant.` });
-  });
-
-  app.get("/blacklist", async (req, res) => {
+  /**
+   * GET /blacklist
+   *
+   * Get user's blacklist
+   */
+  app.get("/blacklist", getBlackList, validate, async (req, res) => {
     try {
       const { userId } = req.body;
 
@@ -296,86 +369,106 @@ module.exports = (app) => {
     }
   });
 
-  app.post("/blacklist", async (req, res) => {
-    try {
-      const { userId, restaurantId } = req.body;
+  /**
+   * POST /blacklist
+   *
+   * Add a restaurant to blacklist
+   */
+  app.post(
+    "/blacklist",
+    addOrRemoveFromBlacklist,
+    validate,
+    async (req, res) => {
+      try {
+        const { userId, restaurantId } = req.body;
 
-      const verificationPromises = [
-        models.User.findAll({
-          where: { id: { [models.Sequelize.Op.eq]: userId } },
-        }),
-        models.Restaurant.findAll({
-          where: { id: { [models.Sequelize.Op.eq]: restaurantId } },
-        }),
-      ];
+        const verificationPromises = [
+          models.User.findAll({
+            where: { id: { [models.Sequelize.Op.eq]: userId } },
+          }),
+          models.Restaurant.findAll({
+            where: { id: { [models.Sequelize.Op.eq]: restaurantId } },
+          }),
+        ];
 
-      const [userResults, restaurantResults] = await Promise.all(
-        verificationPromises
-      );
+        const [userResults, restaurantResults] = await Promise.all(
+          verificationPromises
+        );
 
-      const userExists = userResults.length;
-      const restaurantExists = restaurantResults.length;
+        const userExists = userResults.length;
+        const restaurantExists = restaurantResults.length;
 
-      if (!userExists || !restaurantExists) {
-        return res.status(400).send({
-          message: {
-            userExists,
-            restaurantExists,
+        if (!userExists || !restaurantExists) {
+          return res.status(400).send({
+            message: {
+              userExists,
+              restaurantExists,
+            },
+          });
+        }
+
+        // Avoid querying with user input since findOrCreate does not allow Sequelize.Op
+        const USERNAME = userResults[0].username;
+        const RESTAURANT_ID = restaurantResults[0].id;
+        const USER_ID = userResults[0].id;
+        const result = await models.Blacklist.findOrCreate({
+          where: {
+            username: USERNAME,
+            RestaurantId: RESTAURANT_ID,
+            UserId: USER_ID,
           },
         });
+
+        if (!result[1]) {
+          return res.status(200).send({ message: "Already blacklisted!" });
+        }
+
+        const restaurantName = restaurantResults[0].name;
+        res.status(200).send({
+          message: `Added restaurant to blacklist: ${restaurantName}`,
+        });
+      } catch (e) {
+        console.error(e);
+
+        res.status(500).send({ message: "Internal Server Error" });
       }
-
-      // Avoid querying with user input since findOrCreate does not allow Sequelize.Op
-      const USERNAME = userResults[0].username;
-      const RESTAURANT_ID = restaurantResults[0].id;
-      const USER_ID = userResults[0].id;
-      const result = await models.Blacklist.findOrCreate({
-        where: {
-          username: USERNAME,
-          RestaurantId: RESTAURANT_ID,
-          UserId: USER_ID,
-        },
-      });
-
-      if (!result[1]) {
-        return res.status(200).send({ message: "Already blacklisted!" });
-      }
-
-      const restaurantName = restaurantResults[0].name;
-      res
-        .status(200)
-        .send({ message: `Added restaurant to blacklist: ${restaurantName}` });
-    } catch (e) {
-      console.error(e);
-
-      res.status(500).send({ message: "Internal Server Error" });
     }
-  });
+  );
 
-  app.delete("/unblacklist", async (req, res) => {
-    try {
-      const { userId, restaurantId } = req.body;
+  /**
+   * DELETE /unblacklist
+   *
+   * Remove a restaurant from blacklist
+   */
+  app.delete(
+    "/unblacklist",
+    addOrRemoveFromBlacklist,
+    validate,
+    async (req, res) => {
+      try {
+        const { userId, restaurantId } = req.body;
 
-      const result = await models.Blacklist.destroy({
-        where: {
-          UserId: { [models.Sequelize.Op.eq]: userId },
-          RestaurantId: { [models.Sequelize.Op.eq]: restaurantId },
-        },
-      });
+        const result = await models.Blacklist.destroy({
+          where: {
+            UserId: { [models.Sequelize.Op.eq]: userId },
+            RestaurantId: { [models.Sequelize.Op.eq]: restaurantId },
+          },
+        });
 
-      if (result === 0) {
-        return res
-          .status(400)
-          .send({ message: `Restaurant was not in blacklist.` });
+        if (result === 0) {
+          return res
+            .status(400)
+            .send({ message: `Restaurant was not in blacklist.` });
+        }
+
+        res.status(200).send({
+          message: `Successfully unblacklisted restaurant. The owners are relieved.`,
+        });
+      } catch (e) {
+        console.error(e);
+
+        res.status(500).send({ message: "Internal Server Error" });
       }
-
-      res.status(200).send({
-        message: `Successfully unblacklisted restaurant. The owners are relieved.`,
-      });
-    } catch (e) {
-      console.error(e);
-
-      res.status(500).send({ message: "Internal Server Error" });
     }
-  });
+  );
 };

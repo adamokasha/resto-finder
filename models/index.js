@@ -1,3 +1,11 @@
+/**
+ * models/index.js
+ *
+ * Create new connection pool to DB.
+ * Loads models by looking in every .js file in current dir
+ * except for this file (index.js) and imports them into
+ * Sequelize. If there is an association, pass the db object.
+ */
 const Sequelize = require("sequelize");
 const fs = require("fs");
 const path = require("path");
@@ -7,12 +15,12 @@ const db = {};
 
 // Set up new connection
 const sequelize = new Sequelize({
-  host: "localhost",
+  host: process.env.PG_HOST,
   dialect: "postgres",
-  port: 5432,
-  username: "postgres",
-  password: "password",
-  database: "resto-finder",
+  port: process.env.PG_PORT,
+  username: process.env.PG_USERNAME,
+  password: process.env.PG_PASSWORD,
+  database: process.env.PG_DATABASE,
 });
 
 // Test connection
