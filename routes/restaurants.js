@@ -24,7 +24,6 @@ module.exports = (app) => {
         city,
         province,
         postalCode,
-        country,
         cuisineType,
         distance,
         businessHours,
@@ -35,7 +34,7 @@ module.exports = (app) => {
         city,
         province,
         postalCode,
-        country,
+        country: "Canada",
         cuisineType,
         distance,
       });
@@ -74,13 +73,12 @@ module.exports = (app) => {
         "city",
         "province",
         "postalCode",
-        "country",
         "cuisineType",
       ]);
 
       let iLikeFilters = {};
       // Iterate over filters that should be iLike query and add to iLikeFilters
-      ["name", "city", "postalCode", "country", "cuisineType"]
+      ["name", "city", "postalCode", "cuisineType"]
         .map((filterName) => {
           if (constraints[filterName]) {
             return {
@@ -117,7 +115,7 @@ module.exports = (app) => {
 
       // Get user's blacklist to exclude from results
       const userBlacklist = await models.Blacklist.findAll({
-        where: { UserId: userId },
+        where: { UserId: { [models.Sequelize.Op.eq]: userId } },
       }).map((row) => row.RestaurantId);
 
       // build final query object
@@ -125,17 +123,18 @@ module.exports = (app) => {
         where: {
           ...filters,
           "$Blacklisted.RestaurantId$": {
-            [models.Sequelize.Op.notIn]: userBlacklist,
+            [models.Sequelize.Op.or]: [
+              { [models.Sequelize.Op.notIn]: userBlacklist },
+              { [models.Sequelize.Op.eq]: null },
+            ],
           },
         },
-        include: [
-          {
-            model: models.Blacklist,
-            as: "Blacklisted",
-            attributes: ["RestaurantId"],
-            required: false,
-          },
-        ],
+        include: {
+          model: models.Blacklist,
+          as: "Blacklisted",
+          attributes: ["RestaurantId"],
+          required: false,
+        },
       };
 
       // If currentlyOpen param passed in, need to pass additional filters from BusinessHours table
@@ -189,7 +188,6 @@ module.exports = (app) => {
         "city",
         "province",
         "postalCode",
-        "country",
         "cuisineType",
       ]);
 

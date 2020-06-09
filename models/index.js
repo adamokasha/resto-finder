@@ -15,12 +15,12 @@ const db = {};
 
 // Set up new connection
 const sequelize = new Sequelize({
-  host: "localhost",
+  host: process.env.PG_HOST,
   dialect: "postgres",
-  port: 5432,
-  username: "postgres",
-  password: "password",
-  database: "resto-finder",
+  port: process.env.PG_PORT,
+  username: process.env.PG_USERNAME,
+  password: process.env.PG_PASSWORD,
+  database: process.env.PG_DATABASE,
 });
 
 // Test connection

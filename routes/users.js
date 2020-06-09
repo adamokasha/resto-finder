@@ -13,14 +13,7 @@ module.exports = (app) => {
     userValidation.validate,
     async (req, res) => {
       try {
-        const {
-          username,
-          firstName,
-          lastName,
-          city,
-          province,
-          country,
-        } = req.body;
+        const { username, firstName, lastName, city, province } = req.body;
 
         await models.User.create({
           username,
@@ -28,7 +21,7 @@ module.exports = (app) => {
           lastName,
           city,
           province,
-          country,
+          country: "Canada",
         });
 
         return res.status(201).send({ message: `User ${username} created` });

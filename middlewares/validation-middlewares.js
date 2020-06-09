@@ -2,7 +2,7 @@ const { check, param, validationResult } = require("express-validator");
 
 module.exports = {
   addUser: [
-    check("username").isString().not().isEmpty().trim().escape(),
+    check("username").isEmail().normalizeEmail().not().isEmpty(),
     check("firstName").isString().not().isEmpty().trim().escape(),
     check("lastName").isString().not().isEmpty().trim().escape(),
     check("city").isString().not().isEmpty().trim().escape(),
@@ -26,7 +26,6 @@ module.exports = {
         "SK",
         "YT",
       ]),
-    check("country").isString().not().isEmpty().trim().escape(),
   ],
 
   getUser: [
@@ -75,13 +74,6 @@ module.exports = {
       .isEmpty()
       .trim()
       .escape(),
-    check("country")
-      .isString()
-      .isLength({ min: 1, max: 255 })
-      .not()
-      .isEmpty()
-      .trim()
-      .escape(),
     check("cuisineType")
       .isString()
       .isLength({ min: 1, max: 255 })
@@ -91,8 +83,8 @@ module.exports = {
       .escape(),
     check("distance").isNumeric().not().isEmpty().trim().escape(),
     check("businessHours")
-      .isArray()
-      .isLength({ min: 7, max: 7 })
+      .isArray({ min: 7, max: 7 })
+      //   .isLength({ min: 7, max: 7 })
       .not()
       .isEmpty(),
   ],
@@ -146,12 +138,6 @@ module.exports = {
       .isEmpty()
       .trim()
       .escape(),
-    check("country")
-      .optional()
-      .isString()
-      .isLength({ min: 1, max: 255 })
-      .trim()
-      .escape(),
 
     check("currentlyOpen").optional().isNumeric().isIn(["0", "1"]),
   ],
@@ -203,12 +189,6 @@ module.exports = {
       .isLength({ min: 6, max: 7 })
       .not()
       .isEmpty()
-      .trim()
-      .escape(),
-    check("country")
-      .optional()
-      .isString()
-      .isLength({ min: 1, max: 255 })
       .trim()
       .escape(),
   ],
