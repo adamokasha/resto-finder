@@ -129,12 +129,14 @@ module.exports = (app) => {
             ],
           },
         },
-        include: {
-          model: models.Blacklist,
-          as: "Blacklisted",
-          attributes: ["RestaurantId"],
-          required: false,
-        },
+        include: [
+          {
+            model: models.Blacklist,
+            as: "Blacklisted",
+            attributes: ["RestaurantId"],
+            required: false,
+          },
+        ],
       };
 
       // If currentlyOpen param passed in, need to pass additional filters from BusinessHours table
