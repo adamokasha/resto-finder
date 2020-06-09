@@ -15,7 +15,9 @@ This web server is for demonstration purposes only. There exists no authenticati
 
 # Getting Started
 
-1. Create the env file and add the environment variables for postgres that are compatible for your machine. The db should be called `resto-finder` (as pre-filled below).
+1. Create the env file and add the environment variables for postgres that are compatible for your machine.
+   - The db should be called `resto-finder` (as pre-filled below).
+   - It is recommended to set `PORT` to 5050 so no changes are needed to the postman collection.
 2. Restore the db in `/dump` to Postgres. It is recommended to restore using pgAdmin otherwise please follow instructions [here](https://stackoverflow.com/questions/2732474/restore-a-postgres-backup-file-using-the-command-line)
 3. Run `npm install` to install all dependencies.
 4. Run `npm run start:dev` to run the web server.
