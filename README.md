@@ -19,6 +19,7 @@ This web server is for demonstration purposes only. There exists no authenticati
 2. Restore the db in `/dump` to Postgres. It is recommended to restore using pgAdmin otherwise please follow instructions [here](https://stackoverflow.com/questions/2732474/restore-a-postgres-backup-file-using-the-command-line)
 3. Run `npm install` to install all dependencies.
 4. Run `npm run start:dev` to run the web server.
+5. Get the Postman collection [here](https://www.getpostman.com/collections/ab1430cf0d84b863e2a5)
 
 # API Docs
 
