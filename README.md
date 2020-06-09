@@ -15,26 +15,28 @@ This web server is for demonstration purposes only. There exists no authenticati
 
 # Getting Started
 
-1. Create the env file and add the environment variables for postgres that are compatible for your machine.
-2. Run `npm install` to install all dependencies.
-3. Run `npm run start:dev` to run the web server.
+1. Create the env file and add the environment variables for postgres that are compatible for your machine. The db should be called `resto-finder` (as pre-filled below).
+2. Restore the db in `/dump` to Postgres. It is recommended to restore using pgAdmin otherwise please follow instructions [here](https://stackoverflow.com/questions/2732474/restore-a-postgres-backup-file-using-the-command-line)
+3. Run `npm install` to install all dependencies.
+4. Run `npm run start:dev` to run the web server.
 
 # API Docs
 
-The API doces can be found [here](https://web.postman.co/collections/5644120-03948db4-6696-4cf3-84c7-63aabcb60843?version=latest&workspace=e73fce6f-042e-4c96-894a-c08c49e9cb40)
+The API docs can be found [here](https://documenter.getpostman.com/view/5644120/SzzdD1Mr?version=latest)
 
 # Entity Relationship Diagram
 
-The ERD can be found [here](http://samokasha.com)
+![alt text](resto_finder_erd.png)
 
 # ENV
 
 Create a `.env` file at the project's root directory and add the following environment variables:
 
 ```
+PORT=
 PG_HOST=
 PG_USERNAME=
 PG_PASSWORD=
-PG_DATABASE=
+PG_DATABASE=resto-finder
 PG_PORT=
 ```
