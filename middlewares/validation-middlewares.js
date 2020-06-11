@@ -42,13 +42,8 @@ module.exports = {
     check("username").isEmail().normalizeEmail().not().isEmpty(),
     check("firstName").isString().not().isEmpty().trim().escape(),
     check("lastName").isString().not().isEmpty().trim().escape(),
-    check("city").isString().not().isEmpty().trim().escape(),
-    check("province")
-      .isString()
-      .isLength({ min: 2, max: 2 })
-      .not()
-      .isEmpty()
-      .isIn(PROVINCES),
+    COMMON_PARAMS.city,
+    COMMON_PARAMS.province,
   ],
 
   getUser: [
