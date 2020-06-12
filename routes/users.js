@@ -1,4 +1,4 @@
-const models = require("../models");
+const { User, Sequelize } = require("../models");
 const userValidation = require("../middlewares/validation-middlewares");
 
 module.exports = (app) => {
@@ -15,7 +15,7 @@ module.exports = (app) => {
       try {
         const { username, firstName, lastName, city, province } = req.body;
 
-        await models.User.create({
+        await User.create({
           username,
           firstName,
           lastName,
@@ -54,7 +54,7 @@ module.exports = (app) => {
    */
   app.get("/user/list", async (req, res) => {
     try {
-      const rows = await models.User.findAll();
+      const rows = await User.findAll();
 
       return res.status(200).send({ results: rows });
     } catch (e) {
@@ -76,8 +76,8 @@ module.exports = (app) => {
     async (req, res) => {
       try {
         const { id } = req.params;
-        const rows = await models.User.findAll({
-          where: { id: { [models.Sequelize.Op.eq]: id } },
+        const rows = await User.findAll({
+          where: { id: { [Sequelize.Op.eq]: id } },
           limit: 1,
         });
 
