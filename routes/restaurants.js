@@ -1,4 +1,11 @@
-const models = require("../models");
+const {
+  Sequelize,
+  User,
+  Restaurant,
+  BusinessHours,
+  Favourite,
+  Blacklist,
+} = require("../models");
 const { pick, assign } = require("lodash");
 const {
   addRestaurant,
@@ -29,7 +36,7 @@ module.exports = (app) => {
         businessHours,
       } = req.body;
 
-      const result = await models.Restaurant.create({
+      const result = await Restaurant.create({
         name,
         city,
         province,
@@ -48,7 +55,7 @@ module.exports = (app) => {
           close: hoursData[1],
         }));
 
-      await models.BusinessHours.bulkCreate(businessHoursBatch);
+      await BusinessHours.bulkCreate(businessHoursBatch);
 
       res.status(200).send(result);
     } catch (e) {
@@ -83,7 +90,7 @@ module.exports = (app) => {
           if (constraints[filterName]) {
             return {
               [filterName]: {
-                [models.Sequelize.Op.iLike]: `%${constraints[filterName]}%`,
+                [Sequelize.Op.iLike]: `%${constraints[filterName]}%`,
               },
             };
           }
@@ -103,19 +110,19 @@ module.exports = (app) => {
       // Add distance constraint to filters if needed
       if (constraints.distance) {
         filters.distance = {
-          [models.Sequelize.Op.gte]: parseInt(constraints.distance),
+          [Sequelize.Op.gte]: parseInt(constraints.distance),
         };
       }
 
       if (constraints.province) {
         filters.province = {
-          [models.Sequelize.Op.eq]: constraints.province,
+          [Sequelize.Op.eq]: constraints.province,
         };
       }
 
       // Get user's blacklist to exclude from results
-      const userBlacklist = await models.Blacklist.findAll({
-        where: { UserId: { [models.Sequelize.Op.eq]: userId } },
+      const userBlacklist = await Blacklist.findAll({
+        where: { UserId: { [Sequelize.Op.eq]: userId } },
       }).map((row) => row.RestaurantId);
 
       // build final query object
@@ -123,15 +130,15 @@ module.exports = (app) => {
         where: {
           ...filters,
           "$Blacklisted.RestaurantId$": {
-            [models.Sequelize.Op.or]: [
-              { [models.Sequelize.Op.notIn]: userBlacklist },
-              { [models.Sequelize.Op.eq]: null },
+            [Sequelize.Op.or]: [
+              { [Sequelize.Op.notIn]: userBlacklist },
+              { [Sequelize.Op.eq]: null },
             ],
           },
         },
         include: [
           {
-            model: models.Blacklist,
+            model: Blacklist,
             as: "Blacklisted",
             attributes: ["RestaurantId"],
             required: false,
@@ -153,20 +160,20 @@ module.exports = (app) => {
         // const TIME = "21:00:00";
 
         query.include.push({
-          model: models.BusinessHours,
+          model: BusinessHours,
           where: {
             day,
             open: {
-              [models.Sequelize.Op.lte]: TIME,
+              [Sequelize.Op.lte]: TIME,
             },
             close: {
-              [models.Sequelize.Op.gte]: TIME,
+              [Sequelize.Op.gte]: TIME,
             },
           },
         });
       }
 
-      const rows = await models.Restaurant.findAll(query);
+      const rows = await Restaurant.findAll(query);
 
       return res.status(200).send(rows);
     } catch (e) {
@@ -193,10 +200,10 @@ module.exports = (app) => {
         "cuisineType",
       ]);
 
-      const result = await models.Restaurant.update(
+      const result = await Restaurant.update(
         { ...updates },
         {
-          where: { id: { [models.Sequelize.Op.eq]: restaurantId } },
+          where: { id: { [Sequelize.Op.eq]: restaurantId } },
         }
       );
 
@@ -224,20 +231,20 @@ module.exports = (app) => {
       const { userId } = req.body;
 
       // Get blacklisted restaurants
-      const blackListResults = await models.Blacklist.findAll({
+      const blackListResults = await Blacklist.findAll({
         where: {
-          UserId: { [models.Sequelize.Op.eq]: userId },
+          UserId: { [Sequelize.Op.eq]: userId },
         },
       }).map((blacklistItem) => blacklistItem.RestaurantId);
 
       // query favs without blacklisted restaurants
-      const results = await models.Favourite.findAll({
+      const results = await Favourite.findAll({
         where: {
-          UserId: { [models.Sequelize.Op.eq]: userId },
-          RestaurantId: { [models.Sequelize.Op.notIn]: blackListResults },
+          UserId: { [Sequelize.Op.eq]: userId },
+          RestaurantId: { [Sequelize.Op.notIn]: blackListResults },
         },
         include: {
-          model: models.Restaurant,
+          model: Restaurant,
         },
       });
 
@@ -259,14 +266,14 @@ module.exports = (app) => {
       const { restaurantId, userId } = req.body;
 
       const verificationPromises = [
-        models.Blacklist.findAll({
-          where: { RestaurantId: { [models.Sequelize.Op.eq]: restaurantId } },
+        Blacklist.findAll({
+          where: { RestaurantId: { [Sequelize.Op.eq]: restaurantId } },
         }),
-        models.User.findAll({
-          where: { id: { [models.Sequelize.Op.eq]: userId } },
+        User.findAll({
+          where: { id: { [Sequelize.Op.eq]: userId } },
         }),
-        models.Restaurant.findAll({
-          where: { id: { [models.Sequelize.Op.eq]: restaurantId } },
+        Restaurant.findAll({
+          where: { id: { [Sequelize.Op.eq]: restaurantId } },
         }),
       ];
 
@@ -298,7 +305,7 @@ module.exports = (app) => {
       const USERNAME = userResults[0].username;
       const RESTAURANT_ID = restaurantResults[0].id;
       const USER_ID = userResults[0].id;
-      const result = await models.Favourite.findOrCreate({
+      const result = await Favourite.findOrCreate({
         where: {
           username: USERNAME,
           RestaurantId: RESTAURANT_ID,
@@ -331,10 +338,10 @@ module.exports = (app) => {
     async (req, res) => {
       const { userId, restaurantId } = req.body;
 
-      const result = await models.Favourite.destroy({
+      const result = await Favourite.destroy({
         where: {
-          UserId: { [models.Sequelize.Op.eq]: userId },
-          RestaurantId: { [models.Sequelize.Op.eq]: restaurantId },
+          UserId: { [Sequelize.Op.eq]: userId },
+          RestaurantId: { [Sequelize.Op.eq]: restaurantId },
         },
       });
 
@@ -359,8 +366,8 @@ module.exports = (app) => {
     try {
       const { userId } = req.body;
 
-      const results = await models.Blacklist.findAll({
-        where: { UserId: { [models.Sequelize.Op.eq]: parseInt(userId) } },
+      const results = await Blacklist.findAll({
+        where: { UserId: { [Sequelize.Op.eq]: parseInt(userId) } },
       });
 
       res.status(200).send({ results });
@@ -385,11 +392,11 @@ module.exports = (app) => {
         const { userId, restaurantId } = req.body;
 
         const verificationPromises = [
-          models.User.findAll({
-            where: { id: { [models.Sequelize.Op.eq]: userId } },
+          User.findAll({
+            where: { id: { [Sequelize.Op.eq]: userId } },
           }),
-          models.Restaurant.findAll({
-            where: { id: { [models.Sequelize.Op.eq]: restaurantId } },
+          Restaurant.findAll({
+            where: { id: { [Sequelize.Op.eq]: restaurantId } },
           }),
         ];
 
@@ -413,7 +420,7 @@ module.exports = (app) => {
         const USERNAME = userResults[0].username;
         const RESTAURANT_ID = restaurantResults[0].id;
         const USER_ID = userResults[0].id;
-        const result = await models.Blacklist.findOrCreate({
+        const result = await Blacklist.findOrCreate({
           where: {
             username: USERNAME,
             RestaurantId: RESTAURANT_ID,
@@ -450,10 +457,10 @@ module.exports = (app) => {
       try {
         const { userId, restaurantId } = req.body;
 
-        const result = await models.Blacklist.destroy({
+        const result = await Blacklist.destroy({
           where: {
-            UserId: { [models.Sequelize.Op.eq]: userId },
-            RestaurantId: { [models.Sequelize.Op.eq]: restaurantId },
+            UserId: { [Sequelize.Op.eq]: userId },
+            RestaurantId: { [Sequelize.Op.eq]: restaurantId },
           },
         });
 
