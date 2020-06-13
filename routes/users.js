@@ -55,7 +55,7 @@ module.exports = (app) => {
    */
   app.get("/user/list", async (req, res) => {
     try {
-      const rows = userService.getAllUsers();
+      const rows = await userService.getAllUsers();
 
       return res.status(200).send({ results: rows });
     } catch (e) {

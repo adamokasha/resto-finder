@@ -240,7 +240,7 @@ module.exports = (app) => {
     try {
       const { userId } = req.body;
 
-      const results = restaurantService.getUserBlackList(userId);
+      const results = await restaurantService.getUserBlackList(userId);
 
       res.status(200).send({ results });
     } catch (e) {
@@ -321,7 +321,7 @@ module.exports = (app) => {
       try {
         const { userId, restaurantId } = req.body;
 
-        const result = restaurantService.removeRestaurantFromBlacklist(
+        const result = await restaurantService.removeRestaurantFromBlacklist(
           userId,
           restaurantId
         );
