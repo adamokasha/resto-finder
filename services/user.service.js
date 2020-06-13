@@ -42,4 +42,4 @@ class UserService {
   }
 }
 
-module.exports = new UserService(User, Sequelize);
+module.exports = { userService: new UserService(User, Sequelize), UserService };

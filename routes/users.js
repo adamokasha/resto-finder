@@ -1,4 +1,4 @@
-const UserService = require("../services/user.service");
+const { userService } = require("../services/user.service");
 const {
   addUser,
   getUser,
@@ -22,7 +22,7 @@ module.exports = (app) => {
         "province",
       ]);
 
-      await UserService.addUser(userData);
+      await userService.addUser(userData);
 
       return res
         .status(201)
@@ -55,7 +55,7 @@ module.exports = (app) => {
    */
   app.get("/user/list", async (req, res) => {
     try {
-      const rows = UserService.getAllUsers();
+      const rows = userService.getAllUsers();
 
       return res.status(200).send({ results: rows });
     } catch (e) {
@@ -73,7 +73,7 @@ module.exports = (app) => {
   app.get("/user/:id", validate(getUser), async (req, res) => {
     try {
       const { id } = req.params;
-      const rows = await UserService.getUserById(id);
+      const rows = await userService.getUserById(id);
 
       if (!rows.length) {
         return res
