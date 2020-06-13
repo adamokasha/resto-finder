@@ -18,7 +18,7 @@ module.exports = (app) => {
    *
    * add a new restaurant to the database
    */
-  app.post("/restaurant", addRestaurant, validate, async (req, res) => {
+  app.post("/restaurant", validate(addRestaurant), async (req, res) => {
     try {
       const { businessHours } = req.body;
       const restaurantData = pick(req.body, [
@@ -53,7 +53,7 @@ module.exports = (app) => {
    * Get a set of restaurant recommendations based on a set of passed in
    * filters.
    */
-  app.get("/restaurants", getRestaurants, validate, async (req, res) => {
+  app.get("/restaurants", validate(getRestaurants), async (req, res) => {
     try {
       const { currentlyOpen, userId } = req.body;
       const constraints = pick(req.body, [
@@ -84,7 +84,7 @@ module.exports = (app) => {
    *
    * Update an existing restaurant
    */
-  app.put("/restaurant", updateRestaurant, validate, async (req, res) => {
+  app.put("/restaurant", validate(updateRestaurant), async (req, res) => {
     try {
       const restaurantId = req.body.id;
       const updates = pick(req.body, [
@@ -120,7 +120,7 @@ module.exports = (app) => {
    *
    * Get a user's favourites list
    */
-  app.get("/favourites", getFavourites, validate, async (req, res) => {
+  app.get("/favourites", validate(getFavourites), async (req, res) => {
     try {
       const { userId } = req.body;
 
@@ -146,7 +146,7 @@ module.exports = (app) => {
    *
    * Add a restaurant to favourites
    */
-  app.post("/favourites", addOrRemoveFavourite, validate, async (req, res) => {
+  app.post("/favourites", validate(addOrRemoveFavourite), async (req, res) => {
     try {
       const { restaurantId, userId } = req.body;
 
@@ -210,8 +210,7 @@ module.exports = (app) => {
    */
   app.delete(
     "/unfavourite",
-    addOrRemoveFavourite,
-    validate,
+    validate(addOrRemoveFavourite),
     async (req, res) => {
       const { userId, restaurantId } = req.body;
 
@@ -237,7 +236,7 @@ module.exports = (app) => {
    *
    * Get user's blacklist
    */
-  app.get("/blacklist", getBlackList, validate, async (req, res) => {
+  app.get("/blacklist", validate(getBlackList), async (req, res) => {
     try {
       const { userId } = req.body;
 
@@ -258,8 +257,7 @@ module.exports = (app) => {
    */
   app.post(
     "/blacklist",
-    addOrRemoveFromBlacklist,
-    validate,
+    validate(addOrRemoveFromBlacklist),
     async (req, res) => {
       try {
         const { userId, restaurantId } = req.body;
@@ -318,8 +316,7 @@ module.exports = (app) => {
    */
   app.delete(
     "/unblacklist",
-    addOrRemoveFromBlacklist,
-    validate,
+    validate(addOrRemoveFromBlacklist),
     async (req, res) => {
       try {
         const { userId, restaurantId } = req.body;
