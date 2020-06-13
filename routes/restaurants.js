@@ -1,5 +1,5 @@
-const RestaurantService = require("../services/restaurant.service");
-const UserService = require("../services/user.service");
+const { restaurantService } = require("../services/restaurant.service");
+const { userService } = require("../services/user.service");
 const { pick } = require("lodash");
 const {
   addRestaurant,
@@ -30,11 +30,11 @@ module.exports = (app) => {
         "distance",
       ]);
 
-      const newRestaurant = await RestaurantService.addRestaurant(
+      const newRestaurant = await restaurantService.addRestaurant(
         restaurantData
       );
 
-      await RestaurantService.addRestaurantHours(
+      await restaurantService.addRestaurantHours(
         newRestaurant.id,
         businessHours
       );
@@ -65,7 +65,7 @@ module.exports = (app) => {
         "cuisineType",
       ]);
 
-      const rows = await RestaurantService.getRestaurantsByFilters(
+      const rows = await restaurantService.getRestaurantsByFilters(
         userId,
         constraints,
         currentlyOpen
@@ -96,7 +96,7 @@ module.exports = (app) => {
         "cuisineType",
       ]);
 
-      const result = await RestaurantService.updateRestaurant(
+      const result = await restaurantService.updateRestaurant(
         restaurantId,
         updates
       );
@@ -125,10 +125,10 @@ module.exports = (app) => {
       const { userId } = req.body;
 
       // Get blacklisted restaurants
-      const blackListResults = await RestaurantService.getUserBlackList(userId);
+      const blackListResults = await restaurantService.getUserBlackList(userId);
 
       // query favs without blacklisted restaurants
-      const results = await RestaurantService.getUserFavourites(
+      const results = await restaurantService.getUserFavourites(
         userId,
         blackListResults
       );
@@ -151,9 +151,9 @@ module.exports = (app) => {
       const { restaurantId, userId } = req.body;
 
       const verificationPromises = [
-        RestaurantService.checkIfUserBlacklisted(userId, restaurantId),
-        UserService.getUserById(userId),
-        RestaurantService.getRestaurantById(restaurantId),
+        restaurantService.checkIfUserBlacklisted(userId, restaurantId),
+        userService.getUserById(userId),
+        restaurantService.getRestaurantById(restaurantId),
       ];
 
       const [
@@ -184,7 +184,7 @@ module.exports = (app) => {
       const USERNAME = userResults[0].username;
       const RESTAURANT_ID = restaurantResults[0].id;
       const USER_ID = userResults[0].id;
-      const result = await RestaurantService.addRestaurantToFavourites(
+      const result = await restaurantService.addRestaurantToFavourites(
         USER_ID,
         USERNAME,
         RESTAURANT_ID
@@ -214,7 +214,7 @@ module.exports = (app) => {
     async (req, res) => {
       const { userId, restaurantId } = req.body;
 
-      const result = await RestaurantService.removeRestaurantFromFavourites(
+      const result = await restaurantService.removeRestaurantFromFavourites(
         userId,
         restaurantId
       );
@@ -240,7 +240,7 @@ module.exports = (app) => {
     try {
       const { userId } = req.body;
 
-      const results = RestaurantService.getUserBlackList(userId);
+      const results = restaurantService.getUserBlackList(userId);
 
       res.status(200).send({ results });
     } catch (e) {
@@ -263,8 +263,8 @@ module.exports = (app) => {
         const { userId, restaurantId } = req.body;
 
         const verificationPromises = [
-          UserService.getUserById(userId),
-          RestaurantService.getRestaurantById(restaurantId),
+          userService.getUserById(userId),
+          restaurantService.getRestaurantById(restaurantId),
         ];
 
         const [userResults, restaurantResults] = await Promise.all(
@@ -287,7 +287,7 @@ module.exports = (app) => {
         const USERNAME = userResults[0].username;
         const RESTAURANT_ID = restaurantResults[0].id;
         const USER_ID = userResults[0].id;
-        const result = await RestaurantService.addRestaurantToBlackList(
+        const result = await restaurantService.addRestaurantToBlackList(
           USER_ID,
           USERNAME,
           RESTAURANT_ID
@@ -321,7 +321,7 @@ module.exports = (app) => {
       try {
         const { userId, restaurantId } = req.body;
 
-        const result = RestaurantService.removeRestaurantFromBlacklist(
+        const result = restaurantService.removeRestaurantFromBlacklist(
           userId,
           restaurantId
         );

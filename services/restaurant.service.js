@@ -315,10 +315,13 @@ class RestaurantService {
   }
 }
 
-module.exports = new RestaurantService(
-  Restaurant,
-  BusinessHours,
-  Favourite,
-  Blacklist,
-  Sequelize
-);
+module.exports = {
+  restaurantService: new RestaurantService(
+    Restaurant,
+    BusinessHours,
+    Favourite,
+    Blacklist,
+    Sequelize
+  ),
+  RestaurantService,
+};
