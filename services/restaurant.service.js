@@ -258,7 +258,7 @@ class RestaurantService {
       where: {
         UserId: { [this.Sequelize.Op.eq]: userId },
       },
-    }).map((blacklistItem) => blacklistItem.RestaurantId);
+    });
   }
 
   /**
