@@ -2,7 +2,8 @@ const { User, Sequelize } = require("../models");
 
 class UserService {
   constructor(userModel, sequelize) {
-    (this.User = userModel), (this.Sequelize = sequelize);
+    this.User = userModel;
+    this.Sequelize = sequelize;
   }
 
   /**
