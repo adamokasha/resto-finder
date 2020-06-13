@@ -1,5 +1,6 @@
-const { User, Sequelize } = require("../models");
+const UserService = require("../services/user.service");
 const userValidation = require("../middlewares/validation-middlewares");
+const { pick } = require("lodash");
 
 module.exports = (app) => {
   /**
@@ -13,18 +14,19 @@ module.exports = (app) => {
     userValidation.validate,
     async (req, res) => {
       try {
-        const { username, firstName, lastName, city, province } = req.body;
+        const userData = pick(req.body, [
+          "username",
+          "firstName",
+          "lastName",
+          "city",
+          "province",
+        ]);
 
-        await User.create({
-          username,
-          firstName,
-          lastName,
-          city,
-          province,
-          country: "Canada",
-        });
+        await UserService.addUser(userData);
 
-        return res.status(201).send({ message: `User ${username} created` });
+        return res
+          .status(201)
+          .send({ message: `User ${userData.username} created` });
       } catch (e) {
         // For developer debugging. Send to loggly or similar service.
         console.log(e);
@@ -54,7 +56,7 @@ module.exports = (app) => {
    */
   app.get("/user/list", async (req, res) => {
     try {
-      const rows = await User.findAll();
+      const rows = UserService.getAllUsers();
 
       return res.status(200).send({ results: rows });
     } catch (e) {
@@ -76,10 +78,7 @@ module.exports = (app) => {
     async (req, res) => {
       try {
         const { id } = req.params;
-        const rows = await User.findAll({
-          where: { id: { [Sequelize.Op.eq]: id } },
-          limit: 1,
-        });
+        const rows = await UserService.getUserById(id);
 
         if (!rows.length) {
           return res
