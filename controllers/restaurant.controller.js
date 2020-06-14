@@ -9,6 +9,7 @@ const {
   Sequelize,
 } = require("../models");
 const { pick } = require("lodash");
+const autoBind = require("auto-bind");
 
 class RestaurantController {
   constructor() {
@@ -22,19 +23,7 @@ class RestaurantController {
     this.userService = new UserService(User, Sequelize);
 
     // bind methods
-    this.addRestaurant = this.addRestaurant.bind(this);
-    this.getRestaurantsByFilters = this.getRestaurantsByFilters.bind(this);
-    this.updateRestaurant = this.updateRestaurant.bind(this);
-    this.getUserFavourites = this.getUserFavourites.bind(this);
-    this.addRestaurantToFavourites = this.addRestaurantToFavourites.bind(this);
-    this.removeRestaurantFromFavourites = this.removeRestaurantFromFavourites.bind(
-      this
-    );
-    this.getUserBlackList = this.getUserBlackList.bind(this);
-    this.addRestaurantToBlacklist = this.addRestaurantToBlacklist.bind(this);
-    this.removeRestaurantFromBlacklist = this.removeRestaurantFromBlacklist.bind(
-      this
-    );
+    autoBind(this);
   }
 
   async addRestaurant(req, res) {

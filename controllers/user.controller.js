@@ -1,15 +1,14 @@
 const { UserService } = require("../services/user.service");
 const { User, Sequelize } = require("../models");
 const { pick } = require("lodash");
+const autoBind = require("auto-bind");
 
 class UserController {
   constructor() {
     this.userService = new UserService(User, Sequelize);
 
     // bind methods
-    this.addUser = this.addUser.bind(this);
-    this.getAllUsers = this.getAllUsers.bind(this);
-    this.getUserById = this.getUserById.bind(this);
+    autoBind(this);
   }
 
   async addUser(req, res) {
