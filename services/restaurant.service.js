@@ -1,10 +1,3 @@
-const {
-  Restaurant,
-  BusinessHours,
-  Blacklist,
-  Favourite,
-  Sequelize,
-} = require("../models");
 const { assign } = require("lodash");
 
 class RestaurantService {
@@ -116,7 +109,7 @@ class RestaurantService {
     }
 
     // Get user's blacklist to exclude from results
-    const userBlacklist = await Blacklist.findAll({
+    const userBlacklist = await this.Blacklist.findAll({
       where: { UserId: { [this.Sequelize.Op.eq]: userId } },
     }).map((row) => row.RestaurantId);
 
@@ -168,7 +161,7 @@ class RestaurantService {
       });
     }
 
-    return await Restaurant.findAll(query);
+    return await this.Restaurant.findAll(query);
   }
 
   /**
@@ -180,7 +173,7 @@ class RestaurantService {
    * @param {object} updates
    */
   async updateRestaurant(restaurantId, updates) {
-    return await Restaurant.update(
+    return await this.Restaurant.update(
       { ...updates },
       {
         where: { id: { [this.Sequelize.Op.eq]: restaurantId } },
@@ -199,7 +192,7 @@ class RestaurantService {
   async getUserFavourites(userId, userBlacklist) {
     return await this.Favourite.findAll({
       where: {
-        UserId: { [this.Sequelize.Op.eq]: userId },
+        UserId: { [this.Sequelize.Op.eq]: parseInt(userId) },
         RestaurantId: { [this.Sequelize.Op.notIn]: userBlacklist },
       },
       include: {
@@ -254,10 +247,11 @@ class RestaurantService {
    * @param {string | number} userId
    */
   async getUserBlackList(userId) {
-    return await Blacklist.findAll({
+    return await this.Blacklist.findAll({
       where: {
         UserId: { [this.Sequelize.Op.eq]: userId },
       },
+      raw: true,
     });
   }
 
@@ -270,7 +264,7 @@ class RestaurantService {
    * @param {string | number} restaurantId
    */
   async checkIfUserBlacklisted(userId, restaurantId) {
-    return await Blacklist.findAll({
+    return await this.Blacklist.findAll({
       where: {
         UserId: { [this.Sequelize.Op.eq]: userId },
         RestaurantId: { [this.Sequelize.Op.eq]: restaurantId },
@@ -316,12 +310,5 @@ class RestaurantService {
 }
 
 module.exports = {
-  restaurantService: new RestaurantService(
-    Restaurant,
-    BusinessHours,
-    Favourite,
-    Blacklist,
-    Sequelize
-  ),
   RestaurantService,
 };
