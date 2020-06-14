@@ -11,6 +11,14 @@ class UserController {
     autoBind(this);
   }
 
+  /**
+   * addUser
+   *
+   * Add a user to the database
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async addUser(req, res) {
     try {
       const userData = pick(req.body, [
@@ -47,6 +55,14 @@ class UserController {
     }
   }
 
+  /**
+   * getAllUsers
+   *
+   * Get a list of all the users in the database
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async getAllUsers(req, res) {
     try {
       const rows = await this.userService.getAllUsers();
@@ -59,6 +75,14 @@ class UserController {
     }
   }
 
+  /**
+   * getUserById
+   *
+   * Get a user by id
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async getUserById(req, res) {
     try {
       const { id } = req.params;
