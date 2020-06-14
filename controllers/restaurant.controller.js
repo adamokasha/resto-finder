@@ -9,6 +9,7 @@ const {
   Sequelize,
 } = require("../models");
 const { pick } = require("lodash");
+const autoBind = require("auto-bind");
 
 class RestaurantController {
   constructor() {
@@ -22,21 +23,17 @@ class RestaurantController {
     this.userService = new UserService(User, Sequelize);
 
     // bind methods
-    this.addRestaurant = this.addRestaurant.bind(this);
-    this.getRestaurantsByFilters = this.getRestaurantsByFilters.bind(this);
-    this.updateRestaurant = this.updateRestaurant.bind(this);
-    this.getUserFavourites = this.getUserFavourites.bind(this);
-    this.addRestaurantToFavourites = this.addRestaurantToFavourites.bind(this);
-    this.removeRestaurantFromFavourites = this.removeRestaurantFromFavourites.bind(
-      this
-    );
-    this.getUserBlackList = this.getUserBlackList.bind(this);
-    this.addRestaurantToBlacklist = this.addRestaurantToBlacklist.bind(this);
-    this.removeRestaurantFromBlacklist = this.removeRestaurantFromBlacklist.bind(
-      this
-    );
+    autoBind(this);
   }
 
+  /**
+   * addRestaurant
+   *
+   * Add a restaurant to the database
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async addRestaurant(req, res) {
     try {
       const { businessHours } = req.body;
@@ -66,6 +63,14 @@ class RestaurantController {
     }
   }
 
+  /**
+   * getRestaurantsByFilters
+   *
+   * Get a list of restaurant recommendations based on filters
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async getRestaurantsByFilters(req, res) {
     try {
       const { currentlyOpen, userId } = req.body;
@@ -92,6 +97,14 @@ class RestaurantController {
     }
   }
 
+  /**
+   * updateRestaurant
+   *
+   * Update a restaurant
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async updateRestaurant(req, res) {
     try {
       const restaurantId = req.body.id;
@@ -123,6 +136,13 @@ class RestaurantController {
     }
   }
 
+  /**
+   * getUserFavourites
+   *
+   * Get a list of the user's favourite restaurants
+   * @param {Request} req
+   * @param {Response} res
+   */
   async getUserFavourites(req, res) {
     try {
       const { userId } = req.body;
@@ -149,6 +169,14 @@ class RestaurantController {
     }
   }
 
+  /**
+   * addRestaurantToFavourites
+   *
+   * Add a restaurant to a user's faves
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async addRestaurantToFavourites(req, res) {
     try {
       const { restaurantId, userId } = req.body;
@@ -206,6 +234,14 @@ class RestaurantController {
     }
   }
 
+  /**
+   * removeRestaurantFromFavourites
+   *
+   * Remove a restaurant from user faves
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async removeRestaurantFromFavourites(req, res) {
     try {
       const { userId, restaurantId } = req.body;
@@ -231,6 +267,14 @@ class RestaurantController {
     }
   }
 
+  /**
+   * getUserBlackList
+   *
+   * Get a list of the user's blacklisted restaurants
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async getUserBlackList(req, res) {
     try {
       const { userId } = req.body;
@@ -245,6 +289,14 @@ class RestaurantController {
     }
   }
 
+  /**
+   * addRestaurantToBlacklist
+   *
+   * Add a restaurant to a user's blacklist
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async addRestaurantToBlacklist(req, res) {
     try {
       const { userId, restaurantId } = req.body;
@@ -295,6 +347,13 @@ class RestaurantController {
     }
   }
 
+  /**
+   * removeRestaurantFromBlacklist
+   *
+   * Remove a restaurant from a user's blacklist
+   * @param {Request} req
+   * @param {Response} res
+   */
   async removeRestaurantFromBlacklist(req, res) {
     try {
       const { userId, restaurantId } = req.body;

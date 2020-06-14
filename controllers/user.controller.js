@@ -1,17 +1,24 @@
 const { UserService } = require("../services/user.service");
 const { User, Sequelize } = require("../models");
 const { pick } = require("lodash");
+const autoBind = require("auto-bind");
 
 class UserController {
   constructor() {
     this.userService = new UserService(User, Sequelize);
 
     // bind methods
-    this.addUser = this.addUser.bind(this);
-    this.getAllUsers = this.getAllUsers.bind(this);
-    this.getUserById = this.getUserById.bind(this);
+    autoBind(this);
   }
 
+  /**
+   * addUser
+   *
+   * Add a user to the database
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async addUser(req, res) {
     try {
       const userData = pick(req.body, [
@@ -48,6 +55,14 @@ class UserController {
     }
   }
 
+  /**
+   * getAllUsers
+   *
+   * Get a list of all the users in the database
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async getAllUsers(req, res) {
     try {
       const rows = await this.userService.getAllUsers();
@@ -60,6 +75,14 @@ class UserController {
     }
   }
 
+  /**
+   * getUserById
+   *
+   * Get a user by id
+   *
+   * @param {Request} req
+   * @param {Response} res
+   */
   async getUserById(req, res) {
     try {
       const { id } = req.params;
