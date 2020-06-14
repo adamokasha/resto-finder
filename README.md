@@ -23,14 +23,6 @@ This web server is for demonstration purposes only. There exists no authenticati
 4. Run `npm run start:dev` to run the web server.
 5. Get the Postman collection [here](https://www.getpostman.com/collections/ab1430cf0d84b863e2a5)
 
-# API Docs
-
-The API docs can be found [here](https://documenter.getpostman.com/view/5644120/SzzdD1Mr?version=latest)
-
-# Entity Relationship Diagram
-
-![alt text](resto_finder_erd.png)
-
 # ENV
 
 Create a `.env` file at the project's root directory and add the following environment variables:
@@ -43,3 +35,13 @@ PG_PASSWORD=
 PG_DATABASE=resto-finder
 PG_PORT=
 ```
+
+An example file `.env.example` is provided.
+
+# API Docs
+
+The API docs can be found [here](https://documenter.getpostman.com/view/5644120/SzzdD1Mr?version=latest)
+
+# Entity Relationship Diagram
+
+![alt text](resto_finder_erd.png)
