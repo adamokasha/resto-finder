@@ -1,5 +1,3 @@
-const { User, Sequelize } = require("../models");
-
 class UserService {
   constructor(userModel, sequelize) {
     this.User = userModel;
@@ -14,7 +12,7 @@ class UserService {
    * @param {object} userData
    */
   async addUser(userData) {
-    return await User.create({
+    return await this.User.create({
       ...userData,
       country: "Canada",
     });
@@ -43,4 +41,4 @@ class UserService {
   }
 }
 
-module.exports = { userService: new UserService(User, Sequelize), UserService };
+module.exports = { UserService };
